@@ -26,7 +26,7 @@ public class BookService {
     public void buyBook(Long bookId) {
         Optional<Books> optionalBook = bookRepository.findById(bookId);
         optionalBook.ifPresent(book -> {
-            // Perform logic related to buying the book, e.g., updating status or marking as purchased
+            book.setPurchasedTime(LocalDateTime.now());
             book.setPurchased(true);
             bookRepository.save(book);
         });
@@ -35,15 +35,13 @@ public class BookService {
     public void cancelBook(Long bookId) {
         Optional<Books> optionalBook = bookRepository.findById(bookId);
         optionalBook.ifPresent(book -> {
-            // Perform logic related to canceling the book, e.g., updating status or marking as canceled
             book.setPurchased(false);
+            book.setCanceledTime(LocalDateTime.now());
             bookRepository.save(book);
         });
     }
 
     public List<Books> searchBooks(String query) {
-        // Implement search functionality based on your requirements
-        // For example, search by book title or author
         return bookRepository.findByBookNameContainingIgnoreCase(query);
     }
 }

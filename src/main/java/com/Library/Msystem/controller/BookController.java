@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-// HelloController.java
 @RestController
 @RequestMapping("/api/books")
 public class BookController {

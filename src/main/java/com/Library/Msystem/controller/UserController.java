@@ -32,8 +32,7 @@ public class UserController {
 
     @PostMapping("/Process_register")
     public String saveUser(User user){
-        userRepository.save(user);
-
+        userService.saveUser(user);
         return "browse_books";
     }
 
