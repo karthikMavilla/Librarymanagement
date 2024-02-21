@@ -1,51 +1,40 @@
 package com.Library.Msystem.controller;
 
 import com.Library.Msystem.model.User;
-import com.Library.Msystem.repository.UserRepository;
 import com.Library.Msystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-@Controller
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
     @Autowired
     private UserService userService;
 
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @GetMapping("")
-    public String viewHomepage(){
-        return "browse_books";
+    @GetMapping
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userService.findAllUsers();
+        return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/register")
-    public String showSignupForm(Model model){
-        model.addAttribute("user", new User());
-        return "Signup_form";
-    }
-
-    @PostMapping("/Process_register")
-    public String saveUser(User user){
+    @PostMapping
+    public ResponseEntity<User> createUser(@RequestBody User user) {
         userService.saveUser(user);
-        return "browse_books";
+        return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<User>> getUserById(@PathVariable Long id) {
+        Optional<User> user = userService.findUserById(id);
+        if (user.isPresent()) {
+            return ResponseEntity.ok(user);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
-
-    @GetMapping("/users")
-    @ResponseBody
-    public List<User> getAllUsers(){
-
-        return userService.findAllUsers();
-    }
-
 }
