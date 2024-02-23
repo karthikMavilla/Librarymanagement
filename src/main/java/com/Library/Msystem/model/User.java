@@ -15,7 +15,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false, unique = true, length = 20)
     private String email;
@@ -23,6 +23,9 @@ public class User implements UserDetails {
     private String password;
     @Column(nullable = false, length = 20)
     private String firstName;
+
+    @OneToMany(mappedBy = "user")
+    private List<Token> tokens;
 
 
     @Override

@@ -1,48 +1,96 @@
 package com.Library.Msystem.Auth;
 
 
+import com.Library.Msystem.model.AuthenticationResponse;
+import com.Library.Msystem.model.Token;
 import com.Library.Msystem.model.User;
+import com.Library.Msystem.repository.TokenRepository;
 import com.Library.Msystem.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AuthenticationService {
-    private final UserRepository userRepository;
 
+    private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    private final TokenRepository tokenRepository;
 
     private final AuthenticationManager authenticationManager;
 
-    public AuthenticationService(
-            UserRepository userRepository,
-            AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder
-    ) {
-        this.authenticationManager = authenticationManager;
-        this.userRepository = userRepository;
+    public AuthenticationService(UserRepository repository,
+                                 PasswordEncoder passwordEncoder,
+                                 JwtService jwtService,
+                                 TokenRepository tokenRepository,
+                                 AuthenticationManager authenticationManager) {
+        this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.tokenRepository = tokenRepository;
+        this.authenticationManager = authenticationManager;
     }
 
-    public User signup(RegisterUserDto input) {
+    public AuthenticationResponse register(User request) {
+
+        if(repository.findByEmail(request.getUsername()).isPresent()) {
+            return new AuthenticationResponse(null, "User already exist");
+        }
+
         User user = new User();
-                user.setFirstName(input.getFirstName());
-                user.setEmail(input.getEmail());
-                user.setPassword(passwordEncoder.encode(input.getPassword()));
+        user.setFirstName(request.getFirstName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        return userRepository.save(user);
+        user = repository.save(user);
+
+        String jwt = jwtService.generateToken(user);
+
+        saveUserToken(jwt, user);
+
+        return new AuthenticationResponse(jwt, "User registration was successful");
+
     }
 
-    public User authenticate(LoginUserDto input) {
+    public AuthenticationResponse authenticate(User request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        input.getEmail(),
-                        input.getPassword()
+                        request.getUsername(),
+                        request.getPassword()
                 )
         );
 
-        return userRepository.findByEmail(input.getEmail());
+        User user = repository.findByEmail(request.getUsername()).orElseThrow();
+        String jwt = jwtService.generateToken(user);
+
+        revokeAllTokenByUser(user);
+        saveUserToken(jwt, user);
+
+        return new AuthenticationResponse(jwt, "User login was successful");
+
+    }
+    private void revokeAllTokenByUser(User user) {
+        List<Token> validTokens = tokenRepository.findAllTokensByUser(user.getId());
+        if(validTokens.isEmpty()) {
+            return;
+        }
+
+        validTokens.forEach(t-> {
+            t.setLoggedOut(true);
+        });
+
+        tokenRepository.saveAll(validTokens);
+    }
+    private void saveUserToken(String jwt, User user) {
+        Token token = new Token();
+        token.setToken(jwt);
+        token.setLoggedOut(false);
+        token.setUser(user);
+        tokenRepository.save(token);
     }
 }
