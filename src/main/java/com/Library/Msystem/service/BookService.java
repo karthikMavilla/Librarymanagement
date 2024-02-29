@@ -1,6 +1,7 @@
 package com.Library.Msystem.service;
 
 import com.Library.Msystem.model.Books;
+import com.Library.Msystem.model.User;
 import com.Library.Msystem.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,5 +44,17 @@ public class BookService {
 
     public List<Books> searchBooks(String query) {
         return bookRepository.findByBookNameContainingIgnoreCase(query);
+    }
+
+    public List<Books> findAvailableBooksByLocation(String location) {
+        return bookRepository.findByLocation(location);
+    }
+
+    public List<Books> findAvailableBooksByLocationAndNotPurchased(String location) {
+        return bookRepository.findAvailableBooksByLocationAndPurchasedFalse(location);
+    }
+
+    public List<Books> findBooksByUser(User user) {
+        return bookRepository.findByUser(user);
     }
 }

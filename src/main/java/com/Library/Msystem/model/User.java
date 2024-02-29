@@ -1,7 +1,6 @@
 package com.Library.Msystem.model;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -23,6 +22,8 @@ public class User implements UserDetails {
     private String password;
     @Column(nullable = false, length = 20)
     private String firstName;
+
+    private String location;
 
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;

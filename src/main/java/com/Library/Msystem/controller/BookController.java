@@ -1,28 +1,51 @@
 package com.Library.Msystem.controller;
 
+import com.Library.Msystem.Auth.JwtService;
 import com.Library.Msystem.model.Books;
-import com.Library.Msystem.repository.BookRepository;
+import com.Library.Msystem.model.User;
+import com.Library.Msystem.repository.UserRepository;
 import com.Library.Msystem.service.BookService;
+import com.Library.Msystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
 
     @Autowired
-    private BookRepository bookRepository;
+    private BookService bookService;
+    @Autowired
+    private UserService userService;
 
     @Autowired
-    private BookService bookService;
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtService jwtService;
+
+
 
     @GetMapping
     public ResponseEntity<List<Books>> getAllBooks() {
         List<Books> books = bookService.findAllBooks();
         return ResponseEntity.ok().body(books);
+    }
+    @GetMapping("/available")
+    @ResponseBody
+    public List<Books> getUserInfo(@RequestHeader("Authorization") String token) {
+        String username = jwtService.extarctUsername(token.substring(7));
+        User user = userRepository.findByEmail(username).orElse(null);
+        String location = (user != null) ? user.getLocation() : "Unknown";
+
+        List<Books> availableBooks = bookService.findAvailableBooksByLocationAndNotPurchased(location);
+        List<Books> userBooks = bookService.findBooksByUser(user);
+
+        availableBooks.removeIf(book -> userBooks.contains(book) || (book.getUser() != null && book.getUser().getLocation().equals(location)));
+        return availableBooks;
     }
 
     @GetMapping("/{id}")

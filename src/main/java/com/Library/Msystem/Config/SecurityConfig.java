@@ -43,6 +43,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         req->req.requestMatchers("/login/**","/register/**")
                                 .permitAll()
+                                .requestMatchers("/api/**", "/api/books/available")
+                                .permitAll()
                                 .anyRequest()
                                 .authenticated()
                 ).userDetailsService(userDetailsServiceImp)

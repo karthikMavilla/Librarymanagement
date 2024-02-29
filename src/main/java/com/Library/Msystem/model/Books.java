@@ -26,4 +26,9 @@ public class Books {
 
     private LocalDateTime purchasedTime;
     private LocalDateTime canceledTime;
+
+    private String location;
+
+    @ManyToOne
+    private User user;
 }
